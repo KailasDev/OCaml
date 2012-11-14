@@ -1,23 +1,17 @@
+
 open List;;
 
 let li = 
 ["if";
  "(";
- "(";
- "(";
- "7";
- "+";
- "2";
- ")";
- "*";
- "2";
- ")";
- ">";
+ "fois";
  "(";
  "5";
- "+";
- "1";
+ ",";
+ "4";
  ")";
+ ">";
+ "2";
  ")";
  "then";
  "if";
@@ -44,18 +38,45 @@ let li =
 
 let li2 = ["("; "("; "10"; "*"; "2"; ")"; "*"; "2"; ")"];;
 let li3 = ["("; "10"; "*"; "2"; ")"];;
-let li4 = ["("; "3"; "-";"("; "10"; "*"; "2"; ")";")"];;
-let li5 = ["fonction"; "fois";"(";"end";";"];;
+let li4 = ["("; "3"; "-"; "("; "10"; "*"; "2"; ")";")"];;
+let li5 = ["fonction"; "fois"; "("; "end"; ";"];;
 
-let li7 = ["if";"(";"10";"<";"5";")";"then";"0";"else";"1"];;
+let li7 = ["if"; "("; "10"; "<"; "5"; ")"; "then"; "0"; "else"; "1"];;
 
 
-let li6 = ["Fonction"; "fois"; "("; "int"; "X"; ","; "int"; "Y"; ")";
+let li6 = [["Fonction"; "fois"; "("; "int"; "X"; ","; "int"; "Y"; ")";
+	   "return"; "("; "X"; "*"; "Y"; ")"; ";";
+	   "end"; ";"];
+	   ["Fonction"; "fois2"; "("; "int"; "X"; ","; "int"; "Y"; ")";
+	   "return"; "("; "X"; "*"; "Y"; ")"; ";";
+	   "end"; ";"]];;
+
+let li10 = ["Fonction"; "fois"; "("; "int"; "X"; ","; "int"; "Y"; ")";
 	   "return"; "("; "X"; "*"; "Y"; ")"; ";";
 	   "end"; ";";
 	   "Fonction"; "fois2"; "("; "int"; "X"; ","; "int"; "Y"; ")";
 	   "return"; "("; "X"; "*"; "Y"; ")"; ";";
 	   "end"; ";"];;
+
+
+let li8 = ["Fonction"; "multInt"; "("; "int"; "X"; ","; "int"; "Y"; ")"; "if"; "("; "X"; "=";
+	   "Y"; "then"; "return"; "Y"; ";"; "else"; "return"; "("; "X"; "*"; "multiInt"; "(";
+	   "X"; "-"; "1"; ","; "Y"; ")"; ")"; ";"; "endif"; ";"; "end"; ";"];;
+
+(** (int)string (fonction de base trop longue a ecrire) **)
+
+let sti : string -> int = fun(nb) ->
+  int_of_string(nb)
+;;
+
+
+
+(** (string)int **)
+let its : int -> string = fun(nb) ->
+  string_of_int(nb)
+;;
+
+
 
 
 (** Recupere le x+1eme element (fonctionne comme tableau) **) 
@@ -79,10 +100,74 @@ let rec getModList : string list * int -> string list = fun(li, a) ->
 
 
 
+
+
+(** calcule les a et b avec op l'operation **)
+
+let rec setCalculSys : int * int * string -> int = fun(a, b, op) ->
+  if(op = "*")then
+    a * b
+  else if(op = "/")then
+    a / b
+  else if(op = "+")then
+    a + b
+  else
+    a - b
+;;
+
+
+(** recupere le nb de parenthese fermee (systeme) **)
+
+let rec getNumParSys : string list * int -> int = fun(li, a) ->
+  if(getCaractList(li, 0) = "(")then
+    getNumParSys(getModList(li, 1), a+1)
+  else if(getCaractList(li, 0) = ")")then
+    a
+  else
+    getNumParSys(getModList(li, 1), a)
+;;
+
+
+
+(** appelle de getNumParSys(li, a) **)
+
+let getNumPar : string list -> int = fun(li) ->
+  getNumParSys(li, 0)
+;;
+
+(** systeme du caclul ***)
+
+let rec setCalcul : string list  -> string = fun(li) ->
+  if(getNumPar(li) = 1)then
+    if(getCaractList(li, 2)="*" || getCaractList(li, 2)="/" || getCaractList(li, 2)="+" || getCaractList(li, 2)="-" )then
+      its(setCalculSys(sti(getCaractList(li, 1)), sti(getCaractList(li, 3)), getCaractList(li, 2))) 
+    else
+      "Operateur invalide (operateur possible: +, -, *, /)"
+  else
+    if(getPlacPar(li, 1) = 6)then
+      its(setCalculSys(setCalculSys(sti(getCaractList(li, 2)), sti(getCaractList(li, 4)), getCaractList(li, 3)), sti(getCaractList(li, getPlacPar(li, 1) + 1)), getCaractList(li, getPlacPar(li, 1))))
+    else 
+       its(setCalculSys(sti(getCaractList(li, getPlacPar(li, 1) - 7)), setCalculSys(sti(getCaractList(li, getPlacPar(li, 1) - 4)), sti(getCaractList(li, getPlacPar(li, 1) - 2)), getCaractList(li, getPlacPar(li, 1) - 3)), getCaractList(li, getPlacPar(li, 1)-6)))
+;;
+
+
+(** verifie si fonction existe **)
+let rec isFunction : string list list * string * int -> bool = fun(li, s, i)->
+  if(s = getCaractList(getList(li, i), 1))then
+    true
+  else
+    if(i>0)then
+      isFunction(li, s, i-1)
+    else 
+      false
+;;
+
+
+
 (** Retourne bool pour savoir si exact 
  ** Modifie pour qu'il trouve la parenthese si y a un if devant **)
 
-let rec getBool : string list -> bool = fun(li) ->
+let rec getBool : string list * string list -> bool = fun(li, func) ->
   if(getCaractList(li, 0) = "(")then
     if(getCaractList(li, 2) = "<")then
       if(int_of_string(getCaractList(li, 1)) < int_of_string(getCaractList(li, 3)))then
@@ -104,11 +189,42 @@ let rec getBool : string list -> bool = fun(li) ->
 	true
       else 
 	false
+    else if(isFunction(getListFunction(func, []), getCaractList(li, 1), length(getListFunction(func, []))-1))then
+      getBool(transfFunction(getFunctionList(getListFunction(func, []), getCaractList(li, 1)), [getCaractList(li, 3); getCaractList(li, 5)], [], length(getFunctionList(getListFunction(func, []), getCaractList(li, 1)))), func)
     else 
       false
-  else 
-    getBool(getModList(li, 1))
+  else  
+    getBool(getModList(li, 1), func)
 ;;
+
+
+
+
+
+
+
+
+(** retourne le la suite de la liste apres l'element else voulu (systeme) **)
+
+let rec getElseSystem : string list * int -> string list = fun(li, a) ->
+  if(getCaractList(li, 0) = "if") then
+    getElseSystem(getModList(li, 1), a+1)
+      
+  else if(getCaractList(li, 0) = "else")then
+    if(a = 1)then
+      getModList(li, 1)
+    else 
+      getElseSystem(getModList(li, 1), a-1)
+  else 
+    getElseSystem(getModList(li, 1), a)
+;; 
+
+
+(** appelle de la fonction getElseSystem(li, a) **)
+let getElse : string list -> string list = fun(li) ->
+  getElseSystem(li, 0)
+;;
+
 
 
 (** recupere le nom de toutes les fonctions **)
@@ -124,42 +240,6 @@ let getNameFunction : string list list -> string list = fun(li)->
 ;;
 
 
-
-(** verifie si fonction existe **)
-let rec isFunction : string list * string * int -> bool = fun(li, s, i)->
-  if(s != getCaractList(li, i) && i>=0)then
-    isFunction(li, s, i-1)
-  else
-    if(s = getCaractList(li, i))then
-      true
-    else 
-      false
-;;
-
-
-(** retourne le la suite de la liste apres l'element else voulu (systeme) **)
-
-let rec getElseSystem : string list * int -> string list = fun(li, a) ->
-  if(getCaractList(li, 0) = "if") then
-    getElseSystem(getModList(li, 1), a+1)
-      
-  else if(getCaractList(li, 0) = "else")then
-    if(a = 1)then
-      getModList(li, 1)
-    else 
-      getElseSystem(getModList(li, 1), a-1)
-  else if(isFunction(getCaractList(li, 0)))then
-  else 
-    getElseSystem(getModList(li, 1), a)
-;; 
-
-
-(** appelle de la fonction getElseSystem(li, a) **)
-let getElse : string list -> string list = fun(li) ->
-  getElseSystem(li, 0)
-;;
-
-
 (** recupere la liste apres le then voulu **)
 let rec getThen : string list -> string list = fun(li) ->
   if(getCaractList(li, 0) = "then")then
@@ -171,8 +251,8 @@ let rec getThen : string list -> string list = fun(li) ->
 
 (** recupere la suite de la liste suivant le resultat de l'operation **)
 
-let getOpResult : string list -> string list = fun(li) ->
-  if(getBool(li) = true)then
+let getOpResult : string list * string list -> string list = fun(li, func) ->
+  if(getBool(li, func) = true)then
     getThen(li)
   else 
     getElse(li)
@@ -182,83 +262,17 @@ let getOpResult : string list -> string list = fun(li) ->
 
 (** return du resultat **)
 
-let rec getResult : string list -> string = fun(li) ->
-  if(getCaractList(getOpResult(li),0) = "if")then
-    getResult(getOpResult(li))
+let rec getResult : string list * string list -> string = fun(li, func) ->
+  if(getCaractList(getOpResult(li, func),0) = "if")then
+    getResult(getOpResult(li, func), func)
   else 
-    getCaractList(getOpResult(li), 0)
-;;
-
-
-
-(** (int)string (fonction de base trop longue a ecrire) **)
-
-let sti : string -> int = fun(nb) ->
-  int_of_string(nb)
-;;
-
-
-
-(** (string)int **)
-let its : int -> string = fun(nb) ->
-  string_of_int(nb)
+    getCaractList(getOpResult(li, func), 0)
 ;;
 
 
 
 
 
-(** calcule les a et b avec op l'operation **)
-int
-let rec setCalculSys : int * int * string -> int = fun(a, b, op) ->
-  if(op = "*")then
-    a * b
-  else if(op = "/")then
-    a / b
-  else if(op = "+")then
-    a + b
-  else
-    a - b
-;;
-
-
-(** systeme du caclul ***)
-
-let rec setCalcul : string list  -> string = fun(li) ->
-  if(getNumPar(li) = 1)then
-    if(getCaractList(li, 2)="*" || getCaractList(li, 2)="/" || getCaractList(li, 2)="+" || getCaractList(li, 2)="-" )then
-      its(setCalculSys(sti(getCaractList(li, 1)), sti(getCaractList(li, 3)), getCaractList(li, 2))) 
-    else
-      "Operateur invalide (operateur possible: +, -, *, /)"
-  else
-    if(getPlacPar(li, 1) = 6)then
-      its(setCalculSys(setCalculSys(sti(getCaractList(li, 2)), sti(getCaractList(li, 4)), getCaractList(li, 3)), sti(getCaractList(li, getPlacPar(li, 1) + 1)), getCaractList(li, getPlacPar(li, 1))))
-    else 
-       its(setCalculSys(sti(getCaractList(li, getPlacPar(li, 1) - 7)), setCalculSys(sti(getCaractList(li, getPlacPar(li, 1) - 4)), sti(getCaractList(li, getPlacPar(li, 1) - 2)), getCaractList(li, getPlacPar(li, 1) - 3)), getCaractList(li, getPlacPar(li, 1)-6)))
-;;
-
-
-
-
-
-(** recupere le nb de parenthese fermee (systeme) **)
-
-let rec getNumParSys : string list * int -> int = fun(li, a) ->
-  if(getCaractList(li, 0) = "(")then
-    getNumParSys(getModList(li, 1), a+1)
-  else if(getCaractList(li, 0) = ")")then
-    a
-  else
-    getNumParSys(getModList(li, 1), a)
-;;
-
-
-
-(** appelle de getNumParSys(li, a) **)
-
-let getNumPar : string list -> int = fun(li) ->
-  getNumParSys(li, 0)
-;;
 
 
 (** recupere l'index de l'emplacement de ")" (systeme) **)
@@ -307,12 +321,18 @@ let consList : string list * string list -> string list = fun(li1, li2) ->
   li1@li2
 ;;
 
+
+(** remet la liste dans le bon ordre **)
+
 let rec orderList : string list * int * string list -> string list = fun(li, a, li2)->
   if( a = length(li))then
     li2
   else
     orderList(li, a+1,consStr(li2, getCaractList(li, a)))
 ;;
+
+
+
 
 
 let rec getFunction : string list * string list -> string list = fun(li, li1) ->
@@ -338,6 +358,8 @@ let getIndex : string list * string -> int = fun(li, a)->
 ;;
 
 
+(** retourne des listes pour chaque fonction de la liste principale **)
+
 let rec getListFunction : string list * string list list -> string list list = fun(li, li2)->
   if((getCaractList(li, 0) = "Fonction") && ((getIndex(li, "end")+2) < length(li)))then
     getListFunction(getModList(li, getIndex(li, "end")+2) ,consStr2(li2, orderList(getFunction(li,[]), 0, [])))
@@ -347,6 +369,8 @@ let rec getListFunction : string list * string list list -> string list list = f
     consStr2(li2, consStr([], getCaractList(li,0)))
 ;;
 
+
+(** retourne la liste d'index a **)
 let rec getList : string list list * int -> string list = fun(li, a)->
   if(a > 0)then
     getList(tl(li), a-1)
@@ -363,10 +387,24 @@ let rec getFunctionListSys : string list list * string *int -> string list = fun
     getFunctionListSys(li, s, i-1)
 ;;
 
+
+(** retourne la liste dont le nom de la fonction est s **)
+
 let getFunctionList : string list list * string -> string list = fun(li, s)->
   getFunctionListSys(li, s, length(li)-1)
 ;;
 
 
 
-
+(** remplace les variables par les arguments **)
+let rec transfFunction : string list * string list * string list * int-> string list = fun(li, arg, li1, a)->
+ if(a > 0)then
+   if(getCaractList(li, 0) = "X")then
+     transfFunction(getModList(li, 1), arg, consStr(li1, getCaractList(arg, 0)), a-1)
+   else if(getCaractList(li, 0) = "Y")then
+     transfFunction(getModList(li, 1), arg, consStr(li1, getCaractList(arg, 1)), a-1)
+   else
+     transfFunction(getModList(li, 1), arg, consStr(li1, getCaractList(li, 0)), a-1)
+ else
+   orderList(li1, 0, [])
+;;
