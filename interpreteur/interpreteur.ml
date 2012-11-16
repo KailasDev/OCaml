@@ -59,7 +59,7 @@ let li10 = ["Fonction"; "fois"; "("; "int"; "X"; ","; "int"; "Y"; ")";
 	   "end"; ";"];;
 
 
-let li8 = ["Fonction"; "multInt"; "("; "int"; "X"; ","; "int"; "Y"; ")"; "if"; "("; "X"; "=";
+let li8 = ["Fonction"; "multInt"; "("; "int"; "X"; ","; "int"; "Y"; ")"; "if"; "("; "X"; ">";
 	   "Y"; "then"; "return"; "Y"; ";"; "else"; "return"; "("; "X"; "*"; "multiInt"; "(";
 	   "X"; "-"; "1"; ","; "Y"; ")"; ")"; ";"; "endif"; ";"; "end"; ";"];;
 
@@ -161,8 +161,12 @@ let rec isFunction : string list list * string * int -> bool = fun(li, s, i)->
     else 
       false
 ;;
+(**
+let dto : string list -> string list list = fun(li)->
+  getListFunction(li, [])
+;;
 
-
+**)
 
 (** Retourne bool pour savoir si exact 
  ** Modifie pour qu'il trouve la parenthese si y a un if devant **)
@@ -179,6 +183,16 @@ let rec getBool : string list * string list -> bool = fun(li, func) ->
 	true
       else  
 	false
+    else if(getCaractList(li, 2) = "=")then
+      if(int_of_string(getCaractList(li, 1)) = int_of_string(getCaractList(li, 3)))then
+	true
+      else  
+	false
+    else  if(getCaractList(li, 2) = "!=")then
+      if(int_of_string(getCaractList(li, 1)) != int_of_string(getCaractList(li, 3)))then
+	true
+      else  
+	false
     else if(getCaractList(li, 10) = "<")then
       if(sti(setCalcul(getModList(li, 2))) < sti(setCalcul(getModList(li, 12))))then
 	true
@@ -189,10 +203,20 @@ let rec getBool : string list * string list -> bool = fun(li, func) ->
 	true
       else 
 	false
-    else if(isFunction(getListFunction(func, []), getCaractList(li, 1), length(getListFunction(func, []))-1))then
-      getBool(transfFunction(getFunctionList(getListFunction(func, []), getCaractList(li, 1)), [getCaractList(li, 3); getCaractList(li, 5)], [], length(getFunctionList(getListFunction(func, []), getCaractList(li, 1)))), func)
-    else 
+    else if(getCaractList(li, 10) = "=")then
+      if(sti(setCalcul(getModList(li, 2))) = sti(setCalcul(getModList(li, 12))))then
+	true
+      else 
+	false
+    else if(getCaractList(li, 10) = "!=")then
+      if(sti(setCalcul(getModList(li, 2))) != sti(setCalcul(getModList(li, 12))))then
+	true
+      else 
+	false
+    else
       false
+  else if(isFunction(getListFunction(func, []), getCaractList(li, 1), length(getListFunction(func, []))-1))then
+    getBool(getModList(transfFunction(getFunctionList(getListFunction(func, []), getCaractList(li, 1)), [getCaractList(li, 3); getCaractList(li, 5)], [], length(getFunctionList(getListFunction(func, []), getCaractList(li, 1)))), 10), func)
   else  
     getBool(getModList(li, 1), func)
 ;;
@@ -212,7 +236,10 @@ let rec getElseSystem : string list * int -> string list = fun(li, a) ->
       
   else if(getCaractList(li, 0) = "else")then
     if(a = 1)then
-      getModList(li, 1)
+      if(getCaractList(getModList(li, 1),0) = "return")then
+	getModList(li, 2)
+      else 
+	getModList(li, 1)
     else 
       getElseSystem(getModList(li, 1), a-1)
   else 
@@ -397,14 +424,18 @@ let getFunctionList : string list list * string -> string list = fun(li, s)->
 
 
 (** remplace les variables par les arguments **)
-let rec transfFunction : string list * string list * string list * int-> string list = fun(li, arg, li1, a)->
+let rec transfFunctionSys : string list * string list * string list * int-> string list = fun(li, arg, li1, a)->
  if(a > 0)then
    if(getCaractList(li, 0) = "X")then
-     transfFunction(getModList(li, 1), arg, consStr(li1, getCaractList(arg, 0)), a-1)
+     transfFunctionSys(getModList(li, 1), arg, consStr(li1, getCaractList(arg, 0)), a-1)
    else if(getCaractList(li, 0) = "Y")then
-     transfFunction(getModList(li, 1), arg, consStr(li1, getCaractList(arg, 1)), a-1)
+     transfFunctionSys(getModList(li, 1), arg, consStr(li1, getCaractList(arg, 1)), a-1)
    else
-     transfFunction(getModList(li, 1), arg, consStr(li1, getCaractList(li, 0)), a-1)
+     transfFunctionSys(getModList(li, 1), arg, consStr(li1, getCaractList(li, 0)), a-1)
  else
    orderList(li1, 0, [])
 ;;
+
+
+let rec transfFunction : string list * string list -> string list = fun(li, arg)->
+  transfFunctionSys(li, arg, [], length(li));;
