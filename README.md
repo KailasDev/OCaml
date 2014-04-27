@@ -1,2 +1,2 @@
-Project OCAML
-    developer : A Quiroga 
+Projet OCAML : Licence 1
+========================
